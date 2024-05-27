@@ -1,0 +1,6 @@
+build/
+*.exe
+*.spec
+
+*.txt
+*.docx
