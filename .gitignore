@@ -1,6 +1,8 @@
 build/
 *.exe
+*.zip
 *.spec
 
-*.txt
 *.docx
+*.txt
+!requirements.txt

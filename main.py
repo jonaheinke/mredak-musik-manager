@@ -11,17 +11,20 @@ import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
 from docx import Document
 
+#local imports
+from tooltip import CreateToolTip
+
 #changing the working directory, so that the program can be run from any path
 os.chdir(os.path.dirname(os.path.realpath(__file__)))
 
 # -------------------------------------------------------------------------------------------------------------------- #
 #                                                 WINDOW INITIALIZATION                                                #
 # -------------------------------------------------------------------------------------------------------------------- #
-from tkinter import _test
+
 #window creation
 window = tk.Tk()
-window.title("Musikredaktion Musik Manager")
-window.minsize(403, 372)
+window.title("Musikredaktion Rotationsmanager")
+window.minsize(411, 378)
 
 #tkinter variables
 kalenderwoche = tk.StringVar(window, datetime.now().isocalendar()[1])
@@ -108,19 +111,24 @@ def generate_file():
 						run.text = run.text.replace("KW", "KW " + kalenderwoche.get())
 						break
 				break
-		#fill the table with the text from the text widget
-		#ressource: https://python-docx.readthedocs.io/en/latest/api/table.html
+		#create generator for the processed strings from the text widget
 		line_generator = (string.strip() for string in text.get("1.0", tk.END).split("\n"))
 		line_generator = map(get_artist_and_title, filter(None, line_generator))
 		table = document.tables[0]
+		#fill the table and dynamically add rows
+		#ressource: https://python-docx.readthedocs.io/en/latest/api/table.html
 		table.cell(0, 0).text = next(line_generator, "")
 		for line in line_generator:
 			table.add_row().cells[0].text = line
 		#save the document
 		filename = filedialog.asksaveasfilename(confirmoverwrite = True, defaultextension = ".docx", filetypes = [("Worddatei", "*.docx"), ("Alle Dateien", "*.*")], initialfile = "KW" + kalenderwoche.get(), title = "Worddatei exportieren")
-		if filename != "":
+		if filename == "":
+			return
+		if os.path.isdir(os.path.dirname(filename)):
 			document.save(filename)
 			#messagebox.showinfo("DOCX generieren", "DOCX wurde erfolgreich generiert.")
+		else:
+			messagebox.showerror("PathError", "Der Pfad ist ungültig.")
 	except Exception as e:
 		messagebox.showerror("Fehler beim Worddatei exportieren", e)
 
@@ -128,11 +136,11 @@ def generate_file():
 #                                                        LAYOUT                                                        #
 # -------------------------------------------------------------------------------------------------------------------- #
 
-padding = 14
+padding = 16
 
 #text input with scrollbar
 frame_text = tk.Frame(window)
-scrollbar = tk.Scrollbar(frame_text)
+scrollbar = ttk.Scrollbar(frame_text)
 text = tk.Text(frame_text, width = 50, height = 15, undo = True, yscrollcommand = scrollbar.set)
 scrollbar.config(command = text.yview)
 scrollbar.pack(side = tk.RIGHT, fill = tk.Y)
@@ -143,10 +151,16 @@ frame_controls = tk.Frame(window)
 
 #row with buttons
 frame_first_row = tk.Frame(frame_controls)
-ttk.Button(frame_first_row, text = "Importieren ⭳", cursor = "hand2", command = import_file).pack(side = tk.LEFT)
-ttk.Button(frame_first_row, text = "Exportieren ⭱", cursor = "hand2", command = export_file).pack(side = tk.LEFT, padx = padding)
-ttk.Button(frame_first_row, text = "DOCX generieren ⭲", cursor = "hand2", command = generate_file, style = "Accent.TButton").pack()
-frame_first_row.pack(side = tk.TOP)
+button = ttk.Button(frame_first_row, text = "Importieren ⭳", cursor = "hand2", command = import_file)
+CreateToolTip(button, "Importiert den Text aus einer Textdatei.")
+button.pack(side = tk.LEFT)
+button = ttk.Button(frame_first_row, text = "Exportieren ↥", cursor = "hand2", command = export_file)
+CreateToolTip(button, "Exportiert den Text in eine Textdatei.")
+button.pack(side = tk.LEFT, padx = padding)
+button = ttk.Button(frame_first_row, text = "DOCX generieren →", cursor = "hand2", command = generate_file, style = "Accent.TButton")
+CreateToolTip(button, "Generiert die Worddatei aus dem eingegebenen Text.")
+button.pack()
+frame_first_row.pack()
 
 #row with labels and calendar week control
 frame_second_row = tk.Frame(frame_controls)
@@ -154,7 +168,7 @@ ttk.Label(frame_second_row, text = "Kalenderwoche:").pack(side = tk.LEFT, padx =
 ttk.Spinbox(frame_second_row, from_ = 1, to = 52, textvariable = kalenderwoche, width = 5).pack(side = tk.LEFT)
 ttk.Label(frame_second_row, text = "© 2024 Jona Heinke\nunter MIT Lizenz").pack(side = tk.LEFT, padx = padding)
 ttk.Label(frame_second_row, text = "Version: 1").pack(side = tk.LEFT)
-frame_second_row.pack(side = tk.TOP, pady = (padding, 0))
+frame_second_row.pack(pady = (padding, 0))
 
 frame_controls.pack(side = tk.BOTTOM, fill = tk.X, padx = padding, pady = padding)
 
