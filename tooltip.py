@@ -23,7 +23,7 @@ class CreateToolTip:
 	text: str
 	wraplength:         int = 250 #pixels
 	waittime:           int = 500 #miliseconds
-	offset: tuple[int, int] = (10, 4) #pixels
+	offset: tuple[int, int] = (10, 2) #pixels
 	id: str = field(default = None, init = False)
 	tw: tk.Toplevel = field(default = None, init = False)
 
